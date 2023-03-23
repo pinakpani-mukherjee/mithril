@@ -1,17 +1,13 @@
 package main
 
 import (
+	"mithril/src/database"
+
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func main() {
-	_, err := gorm.Open(mysql.Open("root:root@tcp(db:3306)/mithril"), &gorm.Config{})
-
-	if err != nil {
-		panic("Could not connect with the database!")
-	}
+	database.ConnectWithAutoMigrate()
 	app := fiber.New()
 
 	app.Get("/", func(c *fiber.Ctx) error {
