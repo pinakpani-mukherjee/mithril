@@ -13,9 +13,7 @@ func Register(c *fiber.Ctx) error {
 	var data map[string]string
 
 	if err := c.BodyParser(&data); err != nil {
-		return c.JSON(fiber.Map{
-			"message": "error with parsing",
-		})
+		return err
 	}
 
 	if data["password"] != data["password_confirm"] {
@@ -36,6 +34,34 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	database.DB.Create(&user)
+
+	return c.JSON(user)
+}
+
+func Login(c *fiber.Ctx) error {
+	var data map[string]string
+
+	if err := c.BodyParser(&data); err != nil {
+		return err
+	}
+
+	var user models.User
+
+	database.DB.Where("email=?", data["email"]).First(&user)
+
+	if user.Id == 0 {
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON((fiber.Map{
+			"message": "User not Found!",
+		}))
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data["password"])); err != nil {
+		c.Status(fiber.StatusBadRequest)
+		return c.JSON((fiber.Map{
+			"message": "Wrong Password",
+		}))
+	}
 
 	return c.JSON(user)
 }
