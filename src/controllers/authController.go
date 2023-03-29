@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"math/rand"
 	"mithril/src/database"
+	"mithril/src/middlewares"
 	"mithril/src/models"
 	"time"
 
@@ -15,6 +17,8 @@ func Register(c *fiber.Ctx) error {
 
 	var data map[string]string
 
+	min := 100000000
+	max := 999999999
 	if err := c.BodyParser(&data); err != nil {
 		return err
 	}
@@ -26,6 +30,7 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 	user := models.User{
+		Id:        uint(rand.Intn(max-min+1) + min),
 		FirstName: data["first_name"],
 		LastName:  data["last_name"],
 		Email:     data["email"],
@@ -90,28 +95,18 @@ func Login(c *fiber.Ctx) error {
 	c.Cookie(&cookie)
 
 	return c.JSON(fiber.Map{
-		"message": "Success!",
+		"message": "Logged in successfully!",
 	})
 
 }
 
 func User(c *fiber.Ctx) error {
-	cookie := c.Cookies("jwt")
-	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte("secret"), nil
-	})
-	if err != nil || !token.Valid {
-		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "unauthenticated",
-		})
-	}
 
-	payload := token.Claims.(*jwt.StandardClaims)
+	id, _ := middlewares.GetUserId(c)
 
 	var user models.User
 
-	database.DB.Where("id = ?", payload.Subject).First(&user)
+	database.DB.Where("id = ?", id).First(&user)
 
 	return c.JSON(user)
 }
@@ -127,6 +122,6 @@ func Logout(c *fiber.Ctx) error {
 	c.Cookie(&cookie)
 
 	return c.JSON(fiber.Map{
-		"message": "Success!",
+		"message": "Logged out successfully!",
 	})
 }
