@@ -38,7 +38,7 @@ func main() {
 			LastName:     faker.LastName(),
 			Email:        faker.Email(),
 			Complete:     true,
-			OrderItem:    orderItems,
+			OrderItems:   orderItems,
 		}
 		Order.Id = uint(rand.Intn(max-min+1) + min)
 		database.DB.Create(&Order)
